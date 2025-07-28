@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Order Confirmation</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: url('7.png') no-repeat center center fixed;
+      background-size: cover;
+      color: #fff;
+      min-height: 100vh;
+      margin: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .confirmation-container {
+      background: transparent(255,255,255,0.9);
+      color: #333;
+      padding: 30px;
+      border-radius: 10px;
+      max-width: 600px;
+      text-align: center;
+    }
+    .confirmation-container h3 {
+      color: darkgreen;
+      margin-bottom: 15px;
+    }
+    .order-details {
+      text-align: left;
+      margin: 20px 0;
+      background: #f9f9f9;
+      padding: 15px;
+      border-radius: 8px;
+      border: 1px solid #ddd;
+    }
+    .order-details p {
+      margin: 8px 0;
+    }
+    .btn-continue {
+      display: inline-block;
+      margin-top: 20px;
+      padding: 10px 20px;
+      background: #27ae60;
+      color: white;
+      text-decoration: none;
+      border-radius: 5px;
+      font-size: 1rem;
+    }
+    .btn-continue:hover {
+      background: #219150;
+    }
+  </style>
+</head>
+<body>
+  <div class="confirmation-container">
+    <h3>Your Order Has Been Placed Successfully!</h3>
+    <p>Thank you for your purchase. We’ll deliver your items as per the details provided.</p>
+    <div class="order-details">
+      <h4>Order Details</h4>
+      <p><strong>Order ID:</strong> <span id="orderId"></span></p>
+      <p><strong>Total Price Paid:</strong> ₹<span id="totalPrice"></span></p>
+      <p><strong>Delivery Address:</strong> <span id="deliveryAddress"></span></p>
+      <p><strong>Delivery Date and Time:</strong> <span id="deliveryDate"></span></p>
+      <p><strong>Payment Method:</strong> <span id="paymentMethod"></span></p>
+    </div>
+    <a href="marketplace.html" class="btn-continue">Continue Shopping</a>
+  </div>
+
+  <script>
+    const lastOrder = JSON.parse(localStorage.getItem("lastOrder"));
+    if (lastOrder) {
+      document.getElementById("orderId").innerText = Date.now();
+      document.getElementById("totalPrice").innerText = lastOrder.totalPrice.toFixed(2);
+      document.getElementById("deliveryAddress").innerText = lastOrder.deliveryAddress;
+      document.getElementById("deliveryDate").innerText = lastOrder.deliveryDate;
+      document.getElementById("paymentMethod").innerText = lastOrder.paymentMethod;
+
+      // Send order to backend
+      const orderData = {
+        consumer_id: 1, // replace with actual consumer ID from logged-in user
+        total_price: lastOrder.totalPrice,
+        delivery_address: lastOrder.deliveryAddress,
+        delivery_date: lastOrder.deliveryDate,
+        payment_method: lastOrder.paymentMethod,
+        items: lastOrder.items, // assuming items array is present in lastOrder
+      };
+
+      fetch('http://localhost:3000/add-order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(orderData)
+      })
+      .then(res => res.json())
+      .then(data => {
+        console.log('Order saved successfully:', data);
+      })
+      .catch(err => {
+        console.error('Error:', err);
+      });
+
+      // Save to order history
+      const orderHistory = JSON.parse(localStorage.getItem("allOrders")) || [];
+      const newOrder = {
+        id: new Date().getTime(),
+        totalPrice: lastOrder.totalPrice,
+        deliveryAddress: lastOrder.deliveryAddress,
+        deliveryDate: lastOrder.deliveryDate,
+        paymentMethod: lastOrder.paymentMethod,
+        status: "In Progress"
+      };
+      orderHistory.push(newOrder);
+      localStorage.setItem("allOrders", JSON.stringify(orderHistory));
+
+    } else {
+      document.querySelector(".confirmation-container").innerHTML =
+        "<p>No order found. Please try again.</p>";
+    }
+  </script>
+</body>
+</html>

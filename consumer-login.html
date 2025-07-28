@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Consumer Login</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Inter', sans-serif;
+      background: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.5)),
+       url('4.png') no-repeat center center/cover;
+       display: flex;
+       justify-content: center;
+       align-items: center;
+       height: 100vh;
+      }
+
+    .container {
+      background: rgba(255, 255, 255, 0.96);
+      padding: 30px 25px;
+      border-radius: 15px;
+      width: 90%;
+      max-width: 400px;
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.2);
+      animation: fadeIn 0.8s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    h2 {
+      text-align: center;
+      margin-bottom: 25px;
+      color: #333;
+      font-weight: 600;
+    }
+
+    input {
+      width: 100%;
+      margin: 10px 0;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      font-size: 0.95rem;
+      transition: border 0.3s ease;
+    }
+
+    input:focus {
+      border-color: #007BFF;
+      outline: none;
+    }
+
+    button {
+      width: 100%;
+      margin: 10px 0;
+      padding: 10px;
+      border: none;
+      background-color: #007BFF;
+      color: white;
+      font-size: 1rem;
+      font-weight: 600;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    button:hover {
+      background-color: #0056b3;
+    }
+
+    .toggle, .forgot {
+      text-align: center;
+      margin-top: 12px;
+      color: #007BFF;
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: color 0.3s;
+    }
+
+    .toggle:hover, .forgot:hover {
+      color: #0056b3;
+    }
+
+    .hidden {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2 id="form-title">Consumer Login</h2>
+
+    <!-- Login Form -->
+    <div id="login-form">
+      <input type="text" id="login-phone" placeholder="Phone Number" required />
+      <input type="password" id="login-password" placeholder="Password" required />
+      <button onclick="loginConsumer()">Login</button>
+      <div class="forgot" onclick="showForgotPhone()">Forgot Password?</div>
+    </div>
+
+    <!-- Registration Form -->
+    <div id="register-form" class="hidden">
+      <input type="text" id="reg-name" placeholder="Full Name" required />
+      <input type="text" id="reg-phone" placeholder="Phone Number" required />
+      <input type="password" id="reg-password" placeholder="Password" required />
+      <button onclick="registerConsumer()">Create Account</button>
+    </div>
+
+    <!-- Forgot - Phone Input -->
+    <div id="forgot-phone-form" class="hidden">
+      <input type="text" id="forgot-phone" placeholder="Enter Phone Number" />
+      <button onclick="sendOTP()">Send OTP</button>
+    </div>
+
+    <!-- Forgot - OTP Verification -->
+    <div id="otp-form" class="hidden">
+      <input type="text" id="otp" placeholder="Enter OTP sent to your phone" />
+      <button onclick="verifyOTP()">Verify OTP</button>
+    </div>
+
+    <!-- Forgot - Reset Password -->
+    <div id="reset-form" class="hidden">
+      <input type="password" id="new-password" placeholder="Enter New Password" />
+      <input type="password" id="re-password" placeholder="Re-enter New Password" />
+      <button onclick="resetPassword()">Reset Password</button>
+    </div>
+
+    <div class="toggle" onclick="toggleForm()">Not registered? Create an account</div>
+  </div>
+
+  <script>
+    function toggleForm() {
+      document.getElementById("login-form").classList.toggle("hidden");
+      document.getElementById("register-form").classList.toggle("hidden");
+      document.getElementById("form-title").innerText =
+        document.getElementById("login-form").classList.contains("hidden")
+          ? "Create Account"
+          : "Consumer Login";
+    }
+
+    function getConsumers() {
+      return JSON.parse(localStorage.getItem("consumers") || "[]");
+    }
+
+    function saveConsumers(consumers) {
+      localStorage.setItem("consumers", JSON.stringify(consumers));
+    }
+
+    function registerConsumer() {
+      const name = document.getElementById("reg-name").value;
+      const phone = document.getElementById("reg-phone").value;
+      const password = document.getElementById("reg-password").value;
+
+      if (!name || !phone || !password) {
+        alert("Please fill all fields.");
+        return;
+      }
+
+      let consumers = getConsumers();
+      if (consumers.find((c) => c.phone === phone)) {
+        alert("Consumer already exists!");
+        return;
+      }
+
+      consumers.push({ name, phone, password });
+      saveConsumers(consumers);
+      alert("Account created successfully!");
+      toggleForm();
+    }
+
+    function loginConsumer() {
+      const phone = document.getElementById("login-phone").value;
+      const password = document.getElementById("login-password").value;
+      let consumers = getConsumers();
+      const consumer = consumers.find((c) => c.phone === phone && c.password === password);
+
+      if (consumer) {
+        localStorage.setItem("loggedInConsumer", JSON.stringify(consumer));
+        window.location.href = "marketplace.html";
+      } else {
+        alert("Invalid login credentials.");
+      }
+    }
+
+    // Forgot Password Flow
+    let tempPhone = "";
+    let otpCode = "";
+
+    function showForgotPhone() {
+      document.getElementById("login-form").classList.add("hidden");
+      document.getElementById("form-title").innerText = "Reset Password";
+      document.getElementById("forgot-phone-form").classList.remove("hidden");
+      document.querySelector(".toggle").classList.add("hidden");
+    }
+
+    function sendOTP() {
+      const phone = document.getElementById("forgot-phone").value;
+      const consumers = getConsumers();
+      const consumer = consumers.find((c) => c.phone === phone);
+      if (!consumer) {
+        alert("No account with this phone number.");
+        return;
+      }
+
+      otpCode = Math.floor(100000 + Math.random() * 900000).toString();
+      tempPhone = phone;
+      alert("OTP sent to your number: " + otpCode); // Mock OTP
+      document.getElementById("forgot-phone-form").classList.add("hidden");
+      document.getElementById("otp-form").classList.remove("hidden");
+    }
+
+    function verifyOTP() {
+      const enteredOTP = document.getElementById("otp").value;
+      if (enteredOTP === otpCode) {
+        document.getElementById("otp-form").classList.add("hidden");
+        document.getElementById("reset-form").classList.remove("hidden");
+      } else {
+        alert("Incorrect OTP.");
+      }
+    }
+
+    function resetPassword() {
+      const newPass = document.getElementById("new-password").value;
+      const rePass = document.getElementById("re-password").value;
+
+      if (newPass !== rePass) {
+        alert("Passwords do not match.");
+        return;
+      }
+
+      let consumers = getConsumers();
+      const index = consumers.findIndex((c) => c.phone === tempPhone);
+      if (index !== -1) {
+        consumers[index].password = newPass;
+        saveConsumers(consumers);
+        alert("Password reset successful.");
+        location.reload();
+      }
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Order Page</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-image: url('6.jpg');
+      background-size: cover;
+      background-repeat: no-repeat;
+      background-position: center;
+      padding: 20px;
+      margin: 0;
+    }
+    h1, h2 {
+      text-align: center;
+      color: #333;
+    }
+    #orderSummary p {
+      background: #fff;
+      padding: 8px;
+      margin: 5px auto;
+      max-width: 600px;
+      border-radius: 5px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+    }
+    form {
+      max-width: 600px;
+      margin: 20px auto;
+      background: white;
+      padding: 15px;
+      border-radius: 8px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+    }
+    form input,
+    form select {
+      width: 100%;
+      padding: 8px;
+      margin: 8px 0;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+      font-size: 0.95rem;
+      box-sizing: border-box;
+    }
+    form button {
+      width: 100%;
+      padding: 10px;
+      margin-top: 12px;
+      background: #008000;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      font-size: 1rem;
+      cursor: pointer;
+    }
+    form button:hover {
+      background: #006400;
+    }
+    #youWillPay {
+      text-align: center;
+      font-size: 1.1rem;
+      font-weight: bold;
+      margin-top: 10px;
+    }
+    #upiSection,
+    #cardSection {
+      display: none;
+    }
+    .error {
+      color: red;
+      font-weight: bold;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <h1>Your Order</h1>
+  <div id="orderSummary"></div>
+
+  <h2>Delivery Details & Payment</h2>
+  <form id="orderForm">
+    <input type="text" id="addressLine1" placeholder="House No, Building Name" required>
+    <input type="text" id="addressLine2" placeholder="Street, Locality" required>
+    <input type="text" id="addressLine3" placeholder="Landmark (optional)">
+
+    <input type="text" id="pincode" placeholder="Pincode" maxlength="6" required pattern="^[1-9][0-9]{5}$">
+    <select id="state" required>
+      <option value="">Select State</option>
+      <!-- All 28 States + Delhi -->
+      <option>Andhra Pradesh</option>
+      <option>Arunachal Pradesh</option>
+      <option>Assam</option>
+      <option>Bihar</option>
+      <option>Chhattisgarh</option>
+      <option>Delhi</option>
+      <option>Goa</option>
+      <option>Gujarat</option>
+      <option>Haryana</option>
+      <option>Himachal Pradesh</option>
+      <option>Jharkhand</option>
+      <option>Karnataka</option>
+      <option>Kerala</option>
+      <option>Madhya Pradesh</option>
+      <option>Maharashtra</option>
+      <option>Manipur</option>
+      <option>Meghalaya</option>
+      <option>Mizoram</option>
+      <option>Nagaland</option>
+      <option>Odisha</option>
+      <option>Punjab</option>
+      <option>Rajasthan</option>
+      <option>Sikkim</option>
+      <option>Tamil Nadu</option>
+      <option>Telangana</option>
+      <option>Tripura</option>
+      <option>Uttar Pradesh</option>
+      <option>Uttarakhand</option>
+      <option>West Bengal</option>
+    </select>
+
+    <input type="date" id="deliveryDate" required>
+    <select id="deliveryTime" required>
+      <option value="">Select Time Slot</option>
+      <option value="08:00">8 AM – 1 PM</option>
+      <option value="14:00">2 PM – 7 PM</option>
+      <option value="20:00">8 PM – 11 PM</option>
+    </select>
+
+    <p id="youWillPay">You will pay ₹0.00</p>
+
+    <select id="paymentMethod" required>
+      <option value="">Select Payment Method</option>
+      <option value="upi">UPI</option>
+      <option value="card">Card</option>
+    </select>
+
+    <div id="upiSection">
+      <input type="text" id="upiId" placeholder="Enter UPI ID" required>
+      <button type="button" onclick="alert('UPI ID Verified!')">Verify UPI</button>
+    </div>
+
+    <div id="cardSection">
+      <input type="text" name="cardNumber" placeholder="Card Number">
+      <input type="text" name="cardHolder" placeholder="Card Holder Name">
+      <input type="text" name="expiryDate" placeholder="Expiry Date (MM/YY)">
+      <input type="text" name="cvv" placeholder="CVV">
+    </div>    
+
+    <button type="submit">Place Order</button>
+  </form>
+
+  <script>
+    const ITEMS_KEY = 'items';
+    const CART_KEY  = 'consumerCart';
+
+    function getItems() {
+      return JSON.parse(localStorage.getItem(ITEMS_KEY) || '[]')
+        .map(i => ({ ...i, id: Number(i.id) }));
+    }
+    function getCart() {
+      return JSON.parse(localStorage.getItem(CART_KEY) || '[]')
+        .map(e => ({ id: Number(e.id), qty: Number(e.qty) }));
+    }
+
+    function renderCart() {
+      const items = getItems();
+      const cart = getCart();
+      const summary = document.getElementById('orderSummary');
+      summary.innerHTML = '';
+
+      if (!cart.length) {
+        summary.innerHTML = '<p class="error">Your cart is empty.</p>';
+        return;
+      }
+
+      const date = document.getElementById('deliveryDate').value;
+      const time = document.getElementById('deliveryTime').value;
+      let total = 0;
+
+      cart.forEach(entry => {
+        const p = items.find(p => p.id === entry.id);
+        if (!p) return;
+        const priceNum = parseFloat(p.price.replace(/[^\d.]/g, '')) || 0;
+        const subtotal = priceNum * entry.qty;
+        total += subtotal;
+
+        const el = document.createElement('p');
+        el.innerText = `${p.name} — ₹${priceNum} × ${entry.qty} = ₹${subtotal.toFixed(2)}` +
+          (date && time ? ` | Delivery: ${date} at ${time}` : '');
+        summary.appendChild(el);
+      });
+
+      document.getElementById('youWillPay').innerText = `You will pay ₹${total.toFixed(2)}`;
+    }
+
+    // autofill state from pincode
+    document.getElementById('pincode').addEventListener('blur', () => {
+      const pin = document.getElementById('pincode').value;
+      const stateEl = document.getElementById('state');
+      if (pin.startsWith('11')) stateEl.value = 'Delhi';
+      else if (pin.startsWith('56')) stateEl.value = 'Karnataka';
+      // Add more mappings as needed
+      renderCart();
+    });
+
+    // payment toggle
+    document.getElementById('paymentMethod').addEventListener('change', e => {
+      const method = e.target.value;
+      document.getElementById('upiSection').style.display = method === 'upi' ? 'block' : 'none';
+      document.getElementById('cardSection').style.display = method === 'card' ? 'block' : 'none';
+    });
+
+    // disable past dates
+    document.getElementById('deliveryDate').setAttribute(
+      'min', new Date().toISOString().split('T')[0]
+    );
+
+    ['deliveryDate', 'deliveryTime'].forEach(id => {
+      document.getElementById(id).addEventListener('change', renderCart);
+    });
+
+    document.getElementById('orderForm').addEventListener('submit', e => {
+      e.preventDefault();
+
+      const cart = getCart();
+      if (!cart.length) {
+        alert('Your cart is empty. Please add items before placing an order.');
+        return;
+      }
+
+      localStorage.removeItem(CART_KEY);
+      window.location.href = 'order-confirmation.html';
+    });
+
+    renderCart();
+  </script>
+</body>
+</html>

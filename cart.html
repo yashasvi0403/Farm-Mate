@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Your Cart</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 30px;
+      background: lightgreen;
+      background-size: cover;
+    }
+
+    h1 {
+      font-size: 2rem;
+      margin-bottom: 20px;
+      color: #2c3e50;
+      background: rgba(255, 255, 255, 0.8);
+      display: inline-block;
+      padding: 10px 20px;
+      border-radius: 10px;
+    }
+
+    .cart-item {
+      background: rgba(255, 255, 255, 0.9);
+      padding: 20px;
+      margin-bottom: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .cart-item h2 {
+      margin-bottom: 10px;
+      font-size: 1.5rem;
+    }
+
+    .cart-item p {
+      margin: 6px 0;
+    }
+
+    .qty {
+      margin: 10px 0;
+    }
+
+    .qty input {
+      width: 60px;
+      padding: 4px;
+      font-size: 1rem;
+    }
+
+    .cart-item button {
+      background: #e74c3c;
+      color: #fff;
+      border: none;
+      padding: 8px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .cart-item button:hover {
+      background: #c0392b;
+    }
+
+    .summary {
+      background: rgba(245, 245, 245, 0.95);
+      padding: 20px;
+      border-radius: 8px;
+      text-align: center;
+      margin-top: 30px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+
+    .summary p {
+      font-size: 1.2rem;
+      margin-bottom: 15px;
+    }
+
+    .summary button {
+      background: green;
+      color: #fff;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 1rem;
+    }
+
+    .summary button:hover {
+      background: #006400;
+    }
+
+    .empty {
+      font-style: italic;
+      color: #fff;
+      background: rgba(0,0,0,0.4);
+      padding: 10px;
+      border-radius: 5px;
+      display: inline-block;
+    }
+
+    .error {
+      color: red;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>🛒 Your Cart</h1>
+  <div id="cart-items"></div>
+
+  <div class="summary" id="cart-summary" style="display:none;">
+    <p id="total-amount"></p>
+    <button onclick="proceedToOrder()">Proceed to Checkout</button>
+  </div>
+
+  <script>
+    const ITEMS_KEY = 'items';
+    const CART_KEY  = 'consumerCart';
+
+    function getItems() {
+      return JSON.parse(localStorage.getItem(ITEMS_KEY) || '[]')
+        .map(i => ({ ...i, id: Number(i.id) }));
+    }
+
+    function getCart() {
+      return JSON.parse(localStorage.getItem(CART_KEY) || '[]')
+        .map(e => ({ id: Number(e.id), qty: Number(e.qty) }));
+    }
+
+    function saveCart(cart) {
+      localStorage.setItem(CART_KEY, JSON.stringify(cart));
+    }
+
+    function renderCart() {
+      const items = getItems();
+      const cart   = getCart();
+      const container = document.getElementById('cart-items');
+      const summary   = document.getElementById('cart-summary');
+      const totalEl   = document.getElementById('total-amount');
+      container.innerHTML = '';
+      summary.style.display = 'none';
+
+      if (!cart.length) {
+        container.innerHTML = '<p class="empty">Your cart is empty.</p>';
+        return;
+      }
+
+      let total = 0;
+
+      cart.forEach(entry => {
+        const product = items.find(p => p.id === entry.id);
+        if (!product) {
+          container.innerHTML += 
+            `<p class="error">⚠️ Product ID ${entry.id} not found in master list.</p>`;
+          return;
+        }
+
+        const priceNum = parseFloat(product.price.replace(/[^\d.]/g, '')) || 0;
+        const subtotal = priceNum * entry.qty;
+        total += subtotal;
+
+        container.innerHTML += `
+          <div class="cart-item">
+            <h2>${product.name}</h2>
+            <p><strong>Price:</strong> ₹${product.price} ${product.unit || 'per unit'}</p>
+            <p class="qty">
+              <strong>Quantity:</strong>
+              <input type="number" min="1" value="${entry.qty}"
+                     onchange="updateQuantity(${product.id}, this.value)">
+            </p>
+            <p><strong>Subtotal:</strong> ₹${subtotal.toFixed(2)}</p>
+            <small>From: ${product.farmerName} – ${product.farmerCity}</small><br><br>
+            <button onclick="removeItem(${product.id})">Remove</button>
+          </div>
+        `;
+      });
+
+      totalEl.textContent = `Total Amount: ₹${total.toFixed(2)}`;
+      summary.style.display = 'block';
+    }
+
+    function updateQuantity(id, val) {
+      const cart = getCart();
+      const entry = cart.find(e => e.id === id);
+      if (!entry) return;
+      const qty = parseInt(val);
+      if (qty < 1) {
+        removeItem(id);
+      } else {
+        entry.qty = qty;
+        saveCart(cart);
+      }
+      renderCart();
+    }
+
+    function removeItem(id) {
+      const cart = getCart().filter(e => e.id !== id);
+      saveCart(cart);
+      renderCart();
+    }
+
+    function proceedToOrder() {
+      location.href = 'order.html';
+    }
+
+    // initial draw
+    renderCart();
+  </script>
+
+</body>
+</html>

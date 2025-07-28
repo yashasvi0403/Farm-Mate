@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Payment</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f9f9ff;
+      padding: 20px;
+      margin: 0;
+    }
+    .order-summary {
+      border: 1px solid #ccc;
+      padding: 15px;
+      margin: 20px 0;
+      max-width: 600px;
+      margin-left: auto;
+      margin-right: auto;
+      background: white;
+      border-radius: 6px;
+    }
+    .order-summary h3 {
+      color: #008000;
+      margin-top: 0;
+    }
+    .order-summary p {
+      margin: 5px 0;
+    }
+    .form-group {
+      margin: 15px auto;
+      max-width: 600px;
+    }
+    input, select, textarea {
+      width: 100%;
+      padding: 8px;
+      margin-top: 5px;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+      box-sizing: border-box;
+      font-size: 1rem;
+    }
+    button {
+      display: block;
+      width: 100%;
+      max-width: 600px;
+      padding: 12px;
+      font-size: 16px;
+      background-color: #008000;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      margin: 20px auto 0;
+    }
+    button:hover {
+      background-color: #006400;
+    }
+  </style>
+</head>
+<body>
+  <!-- Order Summary -->
+  <div class="order-summary">
+    <h3>Order Summary</h3>
+    <div id="orderItems"></div>
+    <p><strong>Total Price:</strong> ₹<span id="totalPrice">0.00</span></p>
+  </div>
+
+  <!-- Delivery Information Form -->
+  <form id="paymentForm">
+    <div class="form-group">
+      <label for="address">Delivery Address</label>
+      <textarea id="address" rows="4" required placeholder="Enter your delivery address"></textarea>
+    </div>
+    <div class="form-group">
+      <label for="deliveryDate">Delivery Date and Time</label>
+      <input type="datetime-local" id="deliveryDate" required />
+    </div>
+    <div class="form-group">
+      <label for="paymentMethod">Payment Method</label>
+      <select id="paymentMethod" required>
+        <option value="creditCard">Credit Card</option>
+        <option value="debitCard">Debit Card</option>
+        <option value="upi">UPI</option>
+        <option value="cashOnDelivery">Cash on Delivery</option>
+      </select>
+    </div>
+    <button type="submit">Place Order</button>
+  </form>
+
+  <script>
+    // 1. Load the cart using the same key as elsewhere
+    const cart = JSON.parse(localStorage.getItem("consumerCart") || "[]");
+
+    // 2. Display order items and calculate total
+    const orderItemsDiv = document.getElementById("orderItems");
+    let totalPrice = 0;
+    cart.forEach(item => {
+      const div = document.createElement("div");
+      div.innerHTML = `
+        <p><strong>${item.name}</strong> — ₹${item.price}</p>
+      `;
+      orderItemsDiv.appendChild(div);
+      totalPrice += parseFloat(item.price);
+    });
+    document.getElementById("totalPrice").innerText = totalPrice.toFixed(2);
+
+    // 3. Handle form submission
+    document.getElementById("paymentForm").addEventListener("submit", function(e) {
+      e.preventDefault();
+
+      const address = document.getElementById("address").value.trim();
+      const deliveryDate = document.getElementById("deliveryDate").value;
+      const paymentMethod = document.getElementById("paymentMethod").value;
+
+      if (!address || !deliveryDate || !paymentMethod) {
+        alert("Please fill in all fields.");
+        return;
+      }
+
+      // Build order details object
+      const orderDetails = {
+        items: cart,
+        totalPrice: totalPrice,
+        deliveryAddress: address,
+        deliveryDateTime: deliveryDate,
+        paymentMethod: paymentMethod,
+        orderStatus: "Pending"
+      };
+
+      // 4. Save the order and clear the cart
+      localStorage.setItem("lastOrder", JSON.stringify(orderDetails));
+      localStorage.removeItem("consumerCart");
+
+      // 5. Redirect to confirmation page
+      window.location.href = "order-confirmation.html";
+    });
+  </script>
+</body>
+</html>

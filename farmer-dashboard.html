@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Farmer Dashboard</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: url('3.png') no-repeat center center fixed;
+      background-size: cover;
+      padding: 30px;
+      margin: 0;
+    }
+
+    .container {
+      max-width: 600px;
+      margin: auto;
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    h2, h3 {
+      text-align: center;
+    }
+    form {
+      display: flex;
+      flex-direction: column;
+    }
+    form label {
+      margin-top: 10px;
+      font-weight: bold;
+    }
+    form input, form textarea, form button, form select {
+      margin: 5px 0 10px;
+      padding: 10px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+      font-size: 1rem;
+    }
+    form button {
+      background: #4caf50;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    form button:hover {
+      background: #45a049;
+    }
+    #itemsContainer .item-card {
+      background: #e6ffe6;
+      padding: 15px;
+      border-radius: 8px;
+      margin: 12px 0;
+      position: relative;
+    }
+    #itemsContainer .item-card h4 {
+      margin: 0 0 8px;
+    }
+    #itemsContainer .item-card button {
+      position: absolute;
+      top: 15px;
+      right: 15px;
+      background: #f44336;
+      border: none;
+      color: white;
+      padding: 6px 10px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    #itemsContainer .item-card button.edit-btn {
+      right: 70px;
+      background: #2196f3;
+    }
+    #logoutBtn {
+      background: #ff4c4c;
+      color: white;
+      border: none;
+      padding: 8px 12px;
+      border-radius: 5px;
+      cursor: pointer;
+      float: right;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <button id="logoutBtn">Logout</button>
+    <h2>👨‍🌾 Upload New Product</h2>
+    <form id="addForm">
+      <label>Product Name:</label>
+      <input type="text" id="add-name" required>
+
+      <label>Price:</label>
+      <input type="number" id="add-price" required>
+
+      <label>Price Unit:</label>
+      <select id="add-unit" required>
+        <option value="per kg">per kg</option>
+        <option value="per piece">per piece</option>
+        <option value="per dozen">per dozen</option>
+      </select>
+
+      <label>Stock Quantity:</label>
+      <input type="number" id="add-stock" required>
+
+      <label>Manufacture Date (optional):</label>
+      <input type="date" id="add-mfg">
+
+      <label>Expiry / Best Before Date:</label>
+      <input type="date" id="add-exp" required>
+
+      <label>Description:</label>
+      <textarea id="add-desc" rows="3" required></textarea>
+
+      <label>Product Image:</label>
+      <input type="file" id="add-image" accept="image/*">
+
+      <button type="submit">Upload Product</button>
+    </form>
+
+    <h3>Edit Product</h3>
+    <form id="editForm" style="display:none;">
+      <label>Product Name:</label>
+      <input type="text" id="edit-name" required>
+
+      <label>Price:</label>
+      <input type="number" id="edit-price" required>
+
+      <label>Price Unit:</label>
+      <select id="edit-unit" required>
+        <option value="per kg">per kg</option>
+        <option value="per piece">per piece</option>
+        <option value="per dozen">per dozen</option>
+      </select>
+
+      <label>Stock Quantity:</label>
+      <input type="number" id="edit-stock" required>
+
+      <label>Manufacture Date (optional):</label>
+      <input type="date" id="edit-mfg">
+
+      <label>Expiry / Best Before Date:</label>
+      <input type="date" id="edit-exp" required>
+
+      <label>Description:</label>
+      <textarea id="edit-desc" rows="3" required></textarea>
+
+      <label>Product Image:</label>
+      <input type="file" id="edit-image" accept="image/*">
+
+      <button type="submit">Update Product</button>
+    </form>
+
+    <h3>Your Uploaded Items</h3>
+    <div id="itemsContainer"></div>
+  </div>
+
+  <script>
+    // 1) Protect route
+    const farmerData = localStorage.getItem("loggedInFarmer");
+    if (!farmerData) {
+      alert("Please login first!");
+      window.location.href = "farmer-login.html";
+    }
+    const farmer = JSON.parse(farmerData);
+
+    // 2) Helpers
+    function getItems() {
+      return JSON.parse(localStorage.getItem("items") || "[]");
+    }
+    function saveItems(items) {
+      localStorage.setItem("items", JSON.stringify(items));
+    }
+
+    // 3) Logout
+    document.getElementById("logoutBtn").addEventListener("click", () => {
+      localStorage.removeItem("loggedInFarmer");
+      window.location.href = "index.html";
+    });
+
+    // 4) Render items
+    const itemsContainer = document.getElementById("itemsContainer");
+    function renderItems() {
+      const items = getItems().filter(i => i.farmerPhone === farmer.phone);
+      itemsContainer.innerHTML = "";
+      if (items.length === 0) {
+        itemsContainer.innerHTML = "<p>No products uploaded yet.</p>";
+        return;
+      }
+      items.forEach(item => {
+        const card = document.createElement("div");
+        card.className = "item-card";
+        card.innerHTML = `
+          <h4>${item.name}</h4>
+          <p><strong>Price:</strong> ₹${item.price} ${item.unit}</p>
+          <p><strong>Stock:</strong> ${item.stock > 0 ? item.stock : "Out of stock"}</p>
+          <p><strong>Manufacture Date:</strong> ${item.mfg}</p>
+          <p><strong>Expiry Date:</strong> ${item.exp}</p>
+          <p>${item.desc}</p>
+          <button class="delete-btn">Delete</button>
+          <button class="edit-btn">Edit</button>
+        `;
+        // Delete
+        card.querySelector(".delete-btn").addEventListener("click", () => {
+          if (confirm("Are you sure you want to delete this product?")) {
+            const updated = getItems().filter(i => i.id !== item.id);
+            saveItems(updated);
+            renderItems();
+          }
+        });
+        // Edit
+        card.querySelector(".edit-btn").addEventListener("click", () => startEdit(item));
+        itemsContainer.appendChild(card);
+      });
+    }
+
+    // 5) Add new product
+    document.getElementById("addForm").addEventListener("submit", e => {
+      e.preventDefault();
+      const items = getItems();
+      const newItem = {
+        id: Date.now(),
+        name: document.getElementById("add-name").value,
+        price: document.getElementById("add-price").value,
+        unit: document.getElementById("add-unit").value,
+        stock: document.getElementById("add-stock").value,
+        mfg: document.getElementById("add-mfg").value || "N/A",
+        exp: document.getElementById("add-exp").value,
+        desc: document.getElementById("add-desc").value,
+        image: document.getElementById("add-image").files[0],
+        farmerName: farmer.name,
+        farmerPhone: farmer.phone,
+        farmerCity: farmer.city
+      };
+      items.push(newItem);
+      saveItems(items);
+      e.target.reset();
+      renderItems();
+    });
+
+    // 6) Edit product
+    const editForm = document.getElementById("editForm");
+    let editingId = null;
+    function startEdit(item) {
+      editingId = item.id;
+      document.getElementById("addForm").style.display = "none";
+      editForm.style.display = "flex";
+      document.getElementById("edit-name").value = item.name;
+      document.getElementById("edit-price").value = item.price;
+      document.getElementById("edit-unit").value = item.unit;
+      document.getElementById("edit-stock").value = item.stock;
+      document.getElementById("edit-mfg").value = item.mfg !== "N/A" ? item.mfg : "";
+      document.getElementById("edit-exp").value = item.exp;
+      document.getElementById("edit-desc").value = item.desc;
+    }
+    editForm.addEventListener("submit", e => {
+      e.preventDefault();
+      const items = getItems();
+      const idx = items.findIndex(i => i.id === editingId);
+      if (idx > -1) {
+        items[idx].name = document.getElementById("edit-name").value;
+        items[idx].price = document.getElementById("edit-price").value;
+        items[idx].unit = document.getElementById("edit-unit").value;
+        items[idx].stock = document.getElementById("edit-stock").value;
+        items[idx].mfg = document.getElementById("edit-mfg").value || "N/A";
+        items[idx].exp = document.getElementById("edit-exp").value;
+        items[idx].desc = document.getElementById("edit-desc").value;
+        items[idx].image = document.getElementById("edit-image").files[0] || items[idx].image;
+        saveItems(items);
+      }
+      editForm.reset();
+      editForm.style.display = "none";
+      document.getElementById("addForm").style.display = "flex";
+      renderItems();
+    });
+
+    // Initial render
+    renderItems();
+  </script>
+</body>
+</html>

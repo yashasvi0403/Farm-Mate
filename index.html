@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Farmers Connect</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      font-family: 'Segoe UI', sans-serif;
+    }
+
+    body {
+      background: url('1.png') no-repeat center center fixed;
+      background-size: cover;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      color: white;
+      position: relative;
+    }
+
+    .fallback-message {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 2rem;
+      color: black;
+      background: rgba(255, 255, 255, 0.7);
+      padding: 20px;
+      border-radius: 12px;
+      display: none;
+      z-index: 10;
+    }
+
+    .container {
+      background: rgba(0, 0, 0, 0.6);
+      padding: 40px;
+      border-radius: 20px;
+      max-width: 500px;
+      width: 90%;
+      z-index: 5;
+    }
+
+    h1 {
+      font-size: 2.5rem;
+      margin-bottom: 10px;
+    }
+
+    p {
+      font-size: 1.2rem;
+      margin-bottom: 30px;
+    }
+
+    .btn {
+      display: block;
+      margin: 15px auto;
+      padding: 12px 25px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      font-size: 1rem;
+      border-radius: 8px;
+      cursor: pointer;
+      text-decoration: none;
+      transition: background-color 0.3s ease;
+    }
+
+    .btn:hover {
+      background-color: #45a049;
+    }
+  </style>
+</head>
+<body>
+  <div class="fallback-message" id="fallbackMessage">
+    ⚠️ Background image failed to load.
+  </div>
+
+  <div class="container">
+    <h1>🌾Farm Mate🌾</h1>
+    <p>Connecting local farmers directly with consumers</p>
+    <a href="farmer-login.html" class="btn">👨‍🌾 Farmer Login</a>
+    <a href="consumer-login.html" class="btn">🛒 Consumer Login</a>
+  </div>
+
+  <script>
+    const bgImage = new Image();
+    bgImage.src = '1.png';
+    bgImage.onload = function () {
+      document.getElementById('fallbackMessage').style.display = 'none';
+    };
+    bgImage.onerror = function () {
+      document.getElementById('fallbackMessage').style.display = 'block';
+    };
+  </script>
+</body>
+</html>

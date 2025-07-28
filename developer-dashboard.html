@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Developer Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h2>Developer Dashboard</h2>
+        <input type="password" id="secretKey" placeholder="Enter secret key">
+        <button onclick="login()">Login</button>
+        <div id="stats" style="display: none;">
+            <h3>Statistics</h3>
+            <p><strong>Total Products:</strong> <span id="totalProducts"></span></p>
+            <p><strong>Out of Stock:</strong> <span id="outOfStock"></span></p>
+            <p><strong>Total Sold:</strong> <span id="totalSold"></span></p>
+            <p><strong>Total Customers:</strong> <span id="totalCustomers"></span></p>
+            <p><strong>Total Farmers:</strong> <span id="totalFarmers"></span></p>
+            <p><strong>Total Sales:</strong> <span id="totalSales"></span></p>
+        </div>
+    </div>
+    <script>
+        async function login() {
+            const secretKey = document.getElementById('secretKey').value;
+            if (secretKey !== 'mySecretDeveloperKey123') {
+                alert('Invalid secret key!');
+                return;
+            }
+
+            try {
+                const response = await fetch('http://localhost:3000/api/developer/stats', {
+                    headers: { 'x-developer-secret': secretKey }
+                });
+                const data = await response.json();
+                if (!response.ok) throw new Error(data.error || 'Failed to fetch stats');
+
+                document.getElementById('stats').style.display = 'block';
+                document.getElementById('totalProducts').textContent = data.totalProducts;
+                document.getElementById('outOfStock').textContent = data.outOfStock;
+                document.getElementById('totalSold').textContent = data.totalSold || 0;
+                document.getElementById('totalCustomers').textContent = data.totalCustomers;
+                document.getElementById('totalFarmers').textContent = data.totalFarmers;
+                document.getElementById('totalSales').textContent = '₹' + (data.totalSales || 0);
+            } catch (err) {
+                alert('Error: ' + err.message);
+            }
+        }
+    </script>
+</body>
+</html>

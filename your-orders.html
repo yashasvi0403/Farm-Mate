@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Your Orders</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 30px;
+      background: url('5.png') no-repeat center center fixed;
+      background-size: cover;
+      color: #333;
+    }
+    h1 {
+      color: #2c3e50;
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    .order-card {
+      background: white;
+      padding: 20px;
+      margin-bottom: 15px;
+      border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    .order-card h3 {
+      color: #27ae60;
+    }
+    .order-card p {
+      margin: 6px 0;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>📦 Your Orders</h1>
+  <div id="orderList"></div>
+
+  <script>
+    const orders = JSON.parse(localStorage.getItem("allOrders")) || [];
+
+    const container = document.getElementById("orderList");
+
+    if (orders.length === 0) {
+      container.innerHTML = "<p>You haven't placed any orders yet.</p>";
+    } else {
+      container.innerHTML = orders.map(order => `
+        <div class="order-card">
+          <h3>Order ID: ${order.id}</h3>
+          <p><strong>Total Paid:</strong> ₹${order.totalPrice.toFixed(2)}</p>
+          <p><strong>Status:</strong> ${order.status}</p>
+          <p><strong>Delivery Date:</strong> ${order.deliveryDate}</p>
+          <p><strong>Address:</strong> ${order.deliveryAddress}</p>
+          <p><strong>Payment Mode:</strong> ${order.paymentMethod}</p>
+        </div>
+      `).join('');
+    }
+  </script>
+</body>
+</html>

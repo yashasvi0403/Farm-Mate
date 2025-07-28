@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Consumer Marketplace</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    /* Fixed cart icon */
+    #cartIconContainer {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 1000;
+    }
+    #cartBtn {
+      background: #fff;
+      border: 2px solid #008000;
+      color: #008000;
+      padding: 10px 16px;
+      font-size: 20px;
+      border-radius: 50px;
+      cursor: pointer;
+      position: relative;
+    }
+    #cart-count {
+      position: absolute;
+      top: -10px;
+      right: -10px;
+      background-color: red;
+      color: white;
+      font-size: 12px;
+      padding: 4px 6px;
+      border-radius: 50%;
+    }
+
+    /* Top bar */
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 20px;
+      margin-top: 60px; /* avoid overlap with cart icon */
+      background: #f0f0f0;
+    }
+    .top-bar input, .top-bar select {
+      padding: 8px;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+      font-size: 14px;
+    }
+
+    /* Product grid */
+    #productList {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 20px;
+      padding: 20px;
+    }
+    .product {
+      background: white;
+      padding: 15px;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    .product h3 {
+      margin-top: 0;
+      color: #4caf50;
+    }
+    .product button {
+      background: #008000;
+      color: white;
+      padding: 8px 12px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+    .product button:hover {
+      background: #006400;
+    }
+  </style>
+</head>
+<body>
+  <!-- Cart Icon -->
+  <div id="cartIconContainer">
+    <button id="cartBtn" onclick="goToCart()">
+      🛒 <span id="cart-count">0</span>
+    </button>
+  </div>
+
+  <!-- Controls -->
+  <div class="top-bar">
+    <input type="text" id="searchBar" placeholder="Search products…" oninput="renderItems()">
+    <select id="sortBy" onchange="renderItems()">
+      <option value="">Sort By</option>
+      <option value="price-asc">Price: Low → High</option>
+      <option value="price-desc">Price: High → Low</option>
+      <option value="name">Name</option>
+    </select>
+  </div>
+
+  <!-- Product Grid -->
+  <div id="productList"></div>
+
+  <script>
+    // Redirect if not logged in
+    if (!localStorage.getItem("loggedInConsumer")) {
+      alert("Please login first!");
+      window.location.href = "consumer-login.html";
+    }
+
+    function getItems() {
+      return JSON.parse(localStorage.getItem("items") || "[]");
+    }
+    function getCart() {
+      return JSON.parse(localStorage.getItem("cart") || "[]");
+    }
+    function saveCart(cart) {
+      localStorage.setItem("cart", JSON.stringify(cart));
+    }
+
+    function updateCartCount() {
+      document.getElementById("cart-count").innerText = getCart().length;
+    }
+
+    function goToCart() {
+      window.location.href = "cart.html";
+    }
+
+    function addToCart(item) {
+      const cart = getCart();
+      cart.push(item);
+      saveCart(cart);
+      updateCartCount();
+      goToCart();
+    }
+
+    function renderItems() {
+      const all = getItems();
+      const searchTerm = document.getElementById("searchBar").value.toLowerCase();
+      const sort = document.getElementById("sortBy").value;
+
+      let filtered = all.filter(i => i.name.toLowerCase().includes(searchTerm));
+
+      if (sort === "price-asc") {
+        filtered.sort((a,b) => parseFloat(a.price) - parseFloat(b.price));
+      } else if (sort === "price-desc") {
+        filtered.sort((a,b) => parseFloat(b.price) - parseFloat(a.price));
+      } else if (sort === "name") {
+        filtered.sort((a,b) => a.name.localeCompare(b.name));
+      }
+
+      const container = document.getElementById("productList");
+      container.innerHTML = "";
+
+      if (filtered.length === 0) {
+        container.innerHTML = "<p>No products found.</p>";
+        return;
+      }
+
+      filtered.forEach(item => {
+        const card = document.createElement("div");
+        card.className = "product";
+
+        const title = document.createElement("h3");
+        title.textContent = item.name;
+
+        const price = document.createElement("p");
+        price.innerHTML = `<strong>Price:</strong> ₹${item.price}`;
+
+        const desc = document.createElement("p");
+        desc.textContent = item.desc;
+
+        const btn = document.createElement("button");
+        btn.textContent = "Add to Cart";
+        btn.addEventListener("click", () => addToCart(item));
+
+        card.append(title, price, desc, btn);
+        container.appendChild(card);
+      });
+    }
+
+    // Initial load
+    updateCartCount();
+    renderItems();
+  </script>
+</body>
+</html>

@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Sales Summary - Farmers Connect</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        body {
+            background: url('1.png') no-repeat center center fixed;
+            background-size: cover;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            color: white;
+            font-family: 'Segoe UI', sans-serif;
+            position: relative;
+            min-height: 100vh;
+        }
+        .container {
+            background: rgba(0, 0, 0, 0.7);
+            padding: 20px;
+            border-radius: 10px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            padding: 10px;
+            border: 1px solid white;
+        }
+        th {
+            background: #4CAF50;
+        }
+        a, button {
+            color: #4CAF50;
+            text-decoration: none;
+            margin-top: 20px;
+            display: inline-block;
+        }
+        button {
+            background: none;
+            border: none;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Sales Summary</h1>
+        <table id="salesTable">
+            <thead>
+                <tr>
+                    <th>Period</th>
+                    <th>Total Sales (₹)</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Daily</td>
+                    <td id="dailySales">Loading...</td>
+                </tr>
+                <tr>
+                    <td>Weekly</td>
+                    <td id="weeklySales">Loading...</td>
+                </tr>
+                <tr>
+                    <td>Monthly</td>
+                    <td id="monthlySales">Loading...</td>
+                </tr>
+                <tr>
+                    <td>Yearly</td>
+                    <td id="yearlySales">Loading...</td>
+                </tr>
+            </tbody>
+        </table>
+        <p><button onclick="logout()">Logout</button></p>
+        <p><a href="index.html">Back to Home</a></p>
+    </div>
+
+    <script>
+        // Check if token exists
+        const token = localStorage.getItem('token');
+        if (!token) {
+            alert('Please log in to view the sales summary.');
+            window.location.href = 'admin-login.html';
+        }
+
+        // Fetch sales summary data from the backend
+        fetch('http://localhost:3000/api/sales-summary', {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                alert(data.error);
+                window.location.href = 'admin-login.html';
+            } else {
+                document.getElementById('dailySales').textContent = data.daily || 0;
+                document.getElementById('weeklySales').textContent = data.weekly || 0;
+                document.getElementById('monthlySales').textContent = data.monthly || 0;
+                document.getElementById('yearlySales').textContent = data.yearly || 0;
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching sales data:', error);
+            alert('Failed to load sales data. Please try again later.');
+            window.location.href = 'admin-login.html';
+        });
+
+        // Logout function
+        function logout() {
+            localStorage.removeItem('token');
+            alert('Logged out successfully.');
+            window.location.href = 'admin-login.html';
+        }
+    </script>
+</body>
+</html>

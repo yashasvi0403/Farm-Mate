@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Test Farmer Insert</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      background-color: #f2f2f2;
+    }
+    form {
+      background-color: white;
+      padding: 20px;
+      border-radius: 8px;
+      max-width: 400px;
+      margin: auto;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    input, button {
+      display: block;
+      width: 100%;
+      margin-bottom: 15px;
+      padding: 10px;
+      font-size: 16px;
+    }
+    button {
+      background-color: #28a745;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #218838;
+    }
+    h2 {
+      text-align: center;
+      color: #333;
+    }
+  </style>
+</head>
+<body>
+  <h2>Insert Farmer Details</h2>
+  <form action="http://localhost:5500/add-farmer" method="POST">
+    <input type="text" name="name" placeholder="Farmer Name" required />
+    <input type="text" name="phone" placeholder="Phone Number" required />
+    <input type="text" name="password" placeholder="Password" required />
+    <input type="text" name="location" placeholder="Location" required />
+    <button type="submit">Submit</button>
+  </form>
+</body>
+</html>

@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Admin Dashboard</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #f9f9f9;
+      padding: 20px;
+    }
+    h1 {
+      text-align: center;
+      color: #333;
+      margin-bottom: 10px;
+    }
+    #clear-all-btn {
+      display: block;
+      margin: 0 auto 20px;
+      background: #e74c3c;
+      color: #fff;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    #clear-all-btn:hover {
+      background: #c0392b;
+    }
+    .section {
+      background: white;
+      padding: 20px;
+      margin: 20px auto;
+      max-width: 800px;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      position: relative;
+    }
+    .section h2 {
+      color: #008000;
+      display: inline-block;
+      margin: 0;
+    }
+    .section .clear-btn {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      background: #cc0000;
+      color: white;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.9rem;
+    }
+    .section .clear-btn:hover {
+      background: #a00000;
+    }
+    pre {
+      background: #eee;
+      padding: 10px;
+      overflow-x: auto;
+      border-radius: 5px;
+    }
+  </style>
+</head>
+<body>
+  <h1>🌾 Admin Dashboard</h1>
+  <button id="clear-all-btn" onclick="clearAll()">Clear All Data</button>
+
+  <div class="section">
+    <h2>👨‍🌾 Farmers</h2>
+    <button class="clear-btn" onclick="clearSection('farmers','farmersData')">Clear</button>
+    <pre id="farmersData">Loading...</pre>
+  </div>
+
+  <div class="section">
+    <h2>🛒 Consumer Accounts</h2>
+    <button class="clear-btn" onclick="clearSection('consumers','consumersData')">Clear</button>
+    <pre id="consumersData">Loading...</pre>
+  </div>
+
+  <div class="section">
+    <h2>📦 Products Added by Farmers</h2>
+    <button class="clear-btn" onclick="clearSection('items','itemsData')">Clear</button>
+    <pre id="itemsData">Loading...</pre>
+  </div>
+
+  <div class="section">
+    <h2>🧑‍💻 Logged-In Farmer</h2>
+    <button class="clear-btn" onclick="clearSection('loggedInFarmer','loggedInFarmer')">Clear</button>
+    <pre id="loggedInFarmer">Loading...</pre>
+  </div>
+
+  <div class="section">
+    <h2>🧑‍💻 Logged-In Consumer</h2>
+    <button class="clear-btn" onclick="clearSection('loggedInConsumer','loggedInConsumer')">Clear</button>
+    <pre id="loggedInConsumer">Loading...</pre>
+  </div>
+
+  <div class="section">
+    <h2>🛒 Cart Items</h2>
+    <button class="clear-btn" onclick="clearSection('consumerCart','cartData')">Clear</button>
+    <pre id="cartData">Loading...</pre>
+  </div>
+
+  <script>
+    // Keys we track
+    const KEYS = [
+      { key:'farmers',        elem:'farmersData' },
+      { key:'consumers',      elem:'consumersData' },
+      { key:'items',          elem:'itemsData' },
+      { key:'loggedInFarmer', elem:'loggedInFarmer' },
+      { key:'loggedInConsumer',elem:'loggedInConsumer' },
+      { key:'consumerCart',   elem:'cartData' }
+    ];
+
+    // Load a single key into its <pre>
+    function loadData(key, elementId) {
+      const data = localStorage.getItem(key);
+      const displayElement = document.getElementById(elementId);
+      if (data) {
+        try {
+          const parsed = JSON.parse(data);
+          displayElement.innerText = JSON.stringify(parsed, null, 2);
+        } catch (err) {
+          displayElement.innerText = `Error parsing "${key}": ${err.message}`;
+        }
+      } else {
+        displayElement.innerText = "No data found.";
+      }
+    }
+
+    // Clear a single section
+    function clearSection(key, elementId) {
+      if (!confirm(`Clear "${key}"?`)) return;
+      localStorage.removeItem(key);
+      loadData(key, elementId);
+    }
+
+    // Clear all tracked keys
+    function clearAll() {
+      if (!confirm("Clear ALL data?")) return;
+      KEYS.forEach(k => localStorage.removeItem(k.key));
+      KEYS.forEach(k => loadData(k.key, k.elem));
+    }
+
+    // On load, initialize each section
+    window.addEventListener('DOMContentLoaded', () => {
+      KEYS.forEach(k => loadData(k.key, k.elem));
+    });
+  </script>
+</body>
+</html>

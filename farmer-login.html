@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Farmer Login</title>
+  <style>
+   body {
+    font-family: Arial, sans-serif;
+    background: url('2.jpg') no-repeat center center fixed;
+    background-size: cover;
+    margin: 0;
+    padding: 30px;
+    position: relative;
+  }
+
+  body::before {
+    content: "";
+    position: static;
+    top: 0; left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.3); 
+    z-index: -1;
+  }
+
+    .container {
+      max-width: 400px;
+      margin: auto;
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+    h2 {
+      text-align: center;
+      margin-bottom: 20px;
+      color: #4caf50;
+    }
+    input, button, select {
+      width: 100%;
+      padding: 6px 8px;
+      margin: 6px 0;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      font-size: 0.9rem;
+      line-height: 1.2;
+      height: 32px;
+      box-sizing: border-box;
+    }
+    textarea {
+      padding: 6px 8px;
+      margin: 6px 0;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      font-size: 0.9rem;
+      box-sizing: border-box;
+    }
+    button {
+      background: #4caf50;
+      color: white;
+      border: none;
+      cursor: pointer;
+      height: auto;
+      padding: 8px;
+    }
+    button:hover {
+      background: #45a049;
+    }
+    .link {
+      color: #4caf50;
+      font-size: 0.9rem;
+      text-align: center;
+      margin-top: 8px;
+      cursor: pointer;
+    }
+    .toggle {
+      text-align: center;
+      margin-top: 12px;
+      color: #4caf50;
+      cursor: pointer;
+      user-select: none;
+      font-size: 1rem;
+    }
+    .hidden {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2 id="form-title">Farmer Login</h2>
+
+    <!-- Login Form -->
+    <div id="login-form">
+      <input type="text" id="login-phone" placeholder="Phone Number" required maxlength="10" pattern="\d{10}">
+      <input type="password" id="login-password" placeholder="Password" required>
+      <button id="login-btn" type="button">Login</button>
+      <div class="link" id="forgot-link">Forgot Password?</div>
+    </div>
+
+    <!-- Registration Form -->
+    <div id="register-form" class="hidden">
+      <input type="text" id="reg-name" placeholder="Full Name" required>
+      <input type="text" id="reg-phone" placeholder="Phone Number" required maxlength="10" pattern="\d{10}">
+      <input type="text" id="reg-city" placeholder="City" required>
+      <input type="password" id="reg-password" placeholder="Password" required>
+      <button id="register-btn" type="button">Create Account</button>
+    </div>
+
+    <!-- Forgot Password Step 1 -->
+    <div id="forgot-step1" class="hidden">
+      <input type="text" id="fp-phone" placeholder="Registered Phone Number" maxlength="10" pattern="\d{10}">
+      <button id="fp-next" type="button">Send OTP</button>
+    </div>
+
+    <!-- Forgot Password Step 2: OTP -->
+    <div id="forgot-step2" class="hidden">
+      <input type="text" id="fp-otp" placeholder="Enter OTP">
+      <button id="fp-verify" type="button">Verify OTP</button>
+    </div>
+
+    <!-- Forgot Password Step 3: Reset Password -->
+    <div id="forgot-step3" class="hidden">
+      <input type="password" id="fp-new-password" placeholder="New Password">
+      <input type="password" id="fp-confirm-password" placeholder="Re-enter Password">
+      <button id="fp-reset" type="button">Reset Password</button>
+    </div>
+
+    <div class="toggle" id="toggle-link">Not registered? Create an account</div>
+  </div>
+
+  <script>
+    const loginForm   = document.getElementById('login-form');
+    const registerForm= document.getElementById('register-form');
+    const formTitle   = document.getElementById('form-title');
+    const toggleLink  = document.getElementById('toggle-link');
+    const forgotLink  = document.getElementById('forgot-link');
+
+    const forgotStep1 = document.getElementById('forgot-step1');
+    const forgotStep2 = document.getElementById('forgot-step2');
+    const forgotStep3 = document.getElementById('forgot-step3');
+
+    let currentResetPhone = "";
+    let generatedOTP = "";
+
+    function showOnly(id) {
+      [loginForm, registerForm, forgotStep1, forgotStep2, forgotStep3]
+        .forEach(el => el.classList.add('hidden'));
+      document.getElementById(id).classList.remove('hidden');
+    }
+
+    toggleLink.addEventListener('click', () => {
+      if (loginForm.classList.contains('hidden')) {
+        showOnly('login-form');
+        formTitle.textContent = 'Farmer Login';
+        toggleLink.textContent = 'Not registered? Create an account';
+      } else {
+        showOnly('register-form');
+        formTitle.textContent = 'Create Account';
+        toggleLink.textContent = 'Already have an account? Login';
+      }
+    });
+
+    forgotLink.addEventListener('click', () => {
+      showOnly('forgot-step1');
+      formTitle.textContent = 'Reset Password';
+    });
+
+    function getFarmers() {
+      return JSON.parse(localStorage.getItem('farmers') || '[]');
+    }
+    function saveFarmers(arr) {
+      console.log('Sending farmers to server:', arr);
+      localStorage.setItem('farmers', JSON.stringify(arr));
+}
+
+
+    document.getElementById('register-btn').addEventListener('click', () => {
+      const name = document.getElementById('reg-name').value.trim();
+      const phone= document.getElementById('reg-phone').value.trim();
+      const city = document.getElementById('reg-city').value.trim();
+      const pwd  = document.getElementById('reg-password').value;
+      if (!name||!phone||!city||!pwd) {
+        alert('Please fill all fields.');
+        return;
+      }
+      const farmers = getFarmers();
+      if (farmers.some(f=>f.phone===phone)) {
+        alert('Phone already registered.');
+        return;
+      }
+      farmers.push({name,phone,city,password:pwd});
+      saveFarmers(farmers);
+      alert('Account created! Please log in.');
+      toggleLink.click();
+    });
+
+    document.getElementById('login-btn').addEventListener('click', () => {
+      const phone = document.getElementById('login-phone').value.trim();
+      const pwd   = document.getElementById('login-password').value;
+      const farmers = getFarmers();
+      const farmer = farmers.find(f=>f.phone===phone&&f.password===pwd);
+      if (farmer) {
+        localStorage.setItem('loggedInFarmer', JSON.stringify(farmer));
+        window.location.href = 'farmer-dashboard.html';
+      } else {
+        alert('Invalid credentials.');
+      }
+    });
+
+    // Forgot Step 1
+    document.getElementById('fp-next').addEventListener('click', () => {
+      const phone = document.getElementById('fp-phone').value.trim();
+      const farmers = getFarmers();
+      if (!farmers.find(f=>f.phone===phone)) {
+        alert('Phone not registered.');
+        return;
+      }
+      currentResetPhone = phone;
+      generatedOTP = Math.floor(1000+Math.random()*9000).toString();
+      alert('OTP sent: '+generatedOTP);
+      showOnly('forgot-step2');
+    });
+
+    // Forgot Step 2
+    document.getElementById('fp-verify').addEventListener('click', () => {
+      if (document.getElementById('fp-otp').value.trim()===generatedOTP) {
+        showOnly('forgot-step3');
+      } else {
+        alert('Incorrect OTP.');
+      }
+    });
+
+    // Forgot Step 3
+    document.getElementById('fp-reset').addEventListener('click', () => {
+      const np = document.getElementById('fp-new-password').value;
+      const cp = document.getElementById('fp-confirm-password').value;
+      if (np!==cp) {
+        alert('Passwords do not match.');
+        return;
+      }
+      const farmers = getFarmers();
+      const idx = farmers.findIndex(f=>f.phone===currentResetPhone);
+      if (idx>-1) {
+        farmers[idx].password = np;
+        saveFarmers(farmers);
+        alert('Password reset! Please login.');
+        showOnly('login-form');
+        formTitle.textContent = 'Farmer Login';
+      }
+    });
+  </script>
+</body>
+</html>

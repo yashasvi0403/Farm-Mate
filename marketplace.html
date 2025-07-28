@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Marketplace – Shop</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    * { box-sizing:border-box; margin:0; padding:0 }
+    body {
+     font-family: Arial, sans-serif;
+     min-height: 100vh;
+     padding: 70px 30px 30px;
+     background-color: greenyellow;
+     background-size: 300px, cover;
+     background-blend-mode: lighten;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(255,255,255,0.7);
+      z-index: -1;
+    }
+
+    .top-bar {
+      position:fixed; top:0; left:0; right:0;
+      background:#fff; padding:10px 30px;
+      display:flex; justify-content:flex-end; gap:15px;
+      box-shadow:0 2px 5px rgba(0,0,0,0.1);
+    }
+    #logout-btn {
+      background:#e74c3c; color:#fff; border:none;
+      padding:8px 16px; border-radius:4px; cursor:pointer;
+    }
+    #logout-btn:hover { background:#c0392b; }
+
+    .cart-icon {
+      position:relative; font-size:1.5rem; cursor:pointer;
+    }
+    .cart-icon .badge {
+      position:absolute; top:-8px; right:-12px;
+      background:red; color:#fff; padding:2px 6px;
+      font-size:.75rem; border-radius:50%;
+    }
+
+    h1 {
+      margin-bottom: 30px;
+      font-size: 2.5rem;
+      text-align: center;
+      background: linear-gradient(to right, #2ecc71, #27ae60);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .controls {
+      display:flex;
+      flex-wrap:wrap;
+      gap:15px;
+      justify-content:center;
+      margin-bottom:30px;
+    }
+    .controls input {
+      padding:10px;
+      font-size:1rem;
+      border:1px solid #ccc;
+      border-radius:8px;
+      flex:1 1 300px;
+      max-width:500px;
+    }
+    .controls select {
+      padding:10px;
+      font-size:1rem;
+      border:1px solid #ccc;
+      border-radius:8px;
+      width:150px;
+    }
+
+    .item-list {
+      display:grid;
+      grid-template-columns:repeat(auto-fill,minmax(250px,1fr));
+      gap:20px;
+    }
+    .item-card {
+      background:#fff;
+      padding:20px;
+      border-radius:12px;
+      box-shadow:0 2px 8px rgba(0,0,0,0.1);
+      transition:transform 0.2s;
+    }
+    .item-card:hover {
+      transform:translateY(-5px);
+    }
+    .item-card img {
+      width:100%; height:180px; object-fit:cover;
+      border-radius:8px; margin-bottom:10px;
+    }
+    .item-card h2 {
+      margin-bottom:10px;
+      font-size:1.25rem;
+      color:#34495e;
+    }
+    .item-card p { margin:6px 0; }
+    .item-card small {
+      display:block;
+      color:#555;
+      margin-top:8px;
+    }
+    .item-card button {
+      margin-top:12px;
+      padding:8px 12px;
+      border:none;
+      border-radius:4px;
+      cursor:pointer;
+      font-size:1rem;
+    }
+    .add-btn {
+      background:#27ae60;
+      color:#fff;
+    }
+    .add-btn:hover {
+      background:#219150;
+    }
+    #orders-btn {
+     background: #219150;
+     color: #fff;
+     border: none;
+     padding: 8px 16px;
+     border-radius: 4px;
+     cursor: pointer;
+    }
+    #orders-btn:hover {
+     background: #2980b9;
+    }
+
+  </style>
+</head>
+<body>
+
+  <div class="top-bar">
+    <div class="cart-icon" onclick="goToCart()">
+      🛒<span class="badge" id="cart-count">0</span>
+    </div>
+    <button id="orders-btn" onclick="goToOrders()">Your Orders</button>
+    <button id="logout-btn" onclick="confirmLogout()">Logout</button>
+  </div>
+  
+  <h1>🛒 Consumer Marketplace</h1>
+  <div class="controls">
+    <input id="search" placeholder="Search products…" />
+    <select id="sort">
+      <option value="">Sort By</option>
+      <option value="price-asc">Price: Low → High</option>
+      <option value="price-desc">Price: High → Low</option>
+      <option value="date-asc">Date: Oldest → Newest</option>
+      <option value="date-desc">Date: Newest → Oldest</option>
+    </select>
+  </div>
+
+  <div id="item-list" class="item-list"></div>
+
+  <script>
+    const ITEMS_KEY = 'items';
+    const CART_KEY  = 'consumerCart';
+
+    // Seed demo items if none exist
+    if (!localStorage.getItem(ITEMS_KEY)) {
+      localStorage.setItem(ITEMS_KEY, JSON.stringify([
+        {
+          id: 1,
+          name: "Fresh Tomatoes",
+          price: "₹40",
+          unit: "per kg",
+          desc: "Organic tomatoes freshly harvested.",
+          mfg: "2024‑04‑12",
+          image: "https://images.unsplash.com/photo-1582515073490-dc6a6e5f5c58",
+          farmerName: "Ravi",
+          farmerCity: "Nashik",
+          farmerPhone: "9876543210"
+        },
+        {
+          id: 2,
+          name: "Sweet Mangoes",
+          price: "₹120",
+          unit: "per dozen",
+          desc: "Juicy Alphonso mangoes from Ratnagiri.",
+          expiry: "2024‑05‑20",
+          image: "https://images.unsplash.com/photo-1584270354949-1e441f05d4c8",
+          farmerName: "Anita",
+          farmerCity: "Ratnagiri",
+          farmerPhone: "9123456780"
+        },
+        {
+          id: 3,
+          name: "Brown Rice",
+          price: "₹70",
+          unit: "per kg",
+          desc: "Long grain organic brown rice.",
+          expiry: "2025‑01‑01",
+          image: "4.png",
+          farmerName: "Rahul",
+          farmerCity: "Hyderabad",
+          farmerPhone: "1234567890"
+        }
+      ]));
+    }
+
+    // Helpers
+    const getItems = () => JSON.parse(localStorage.getItem(ITEMS_KEY) || '[]');
+    const getCart  = () => JSON.parse(localStorage.getItem(CART_KEY) || '[]');
+    const saveCart = cart => localStorage.setItem(CART_KEY, JSON.stringify(cart));
+
+    // Auth guard
+    if (!localStorage.getItem('loggedInConsumer')) {
+      alert('Please log in first!');
+      location.href = 'consumer-login.html';
+    }
+
+    function confirmLogout() {
+      if (confirm('Logout?')) {
+        localStorage.removeItem('loggedInConsumer');
+        location.href = 'index.html';
+      }
+    }
+
+    function goToCart() {
+      location.href = 'cart.html';
+    }
+
+    function toggleCart(id) {
+      id = Number(id);
+      const cart = getCart();
+      const idx  = cart.findIndex(e => e.id === id);
+      if (idx >= 0) {
+        cart[idx].qty += 1;
+      } else {
+        cart.push({ id: id, qty: 1 });
+      }
+      saveCart(cart);
+      updateCartCount();
+      renderItems();
+    }
+
+    function renderItems() {
+      let list = getItems();
+      const term    = document.getElementById('search').value.toLowerCase();
+      const sortVal = document.getElementById('sort').value;
+
+      list = list.filter(i => i.name.toLowerCase().includes(term));
+
+      if (sortVal.startsWith('price')) {
+        list.sort((a,b)=> {
+          const pa = parseFloat(a.price.replace(/[^\d.]/g, ''));
+          const pb = parseFloat(b.price.replace(/[^\d.]/g, ''));
+          return sortVal==='price-asc'? pa-pb : pb-pa;
+        });
+      } else if (sortVal.startsWith('date')) {
+        list.sort((a,b)=>{
+          const da = new Date(a.mfg || a.expiry),
+                db = new Date(b.mfg || b.expiry);
+          return sortVal==='date-asc'? da-db : db-da;
+        });
+      }
+
+      const cart = getCart();
+      const html = list.map(i => {
+        const inCart = cart.find(e=>e.id===i.id);
+        return `
+          <div class="item-card">
+            <img src="${i.image}" alt="${i.name}">
+            <h2>${i.name}</h2>
+            <p><strong>Price:</strong> ${i.price} ${i.unit}</p>
+            <p><strong>${i.mfg? 'Mfg Date': 'Expiry Date'}:</strong> ${i.mfg||i.expiry}</p>
+            <p>${i.desc}</p>
+            <small>${i.farmerName}, ${i.farmerCity} – 📞 ${i.farmerPhone}</small>
+            <button class="add-btn" onclick="toggleCart(${i.id})">
+              ${ inCart ? `Add Again (${inCart.qty})` : 'Add to Cart' }
+            </button>
+          </div>
+        `;
+      }).join('') || '<p>No products found.</p>';
+      document.getElementById('item-list').innerHTML = html;
+    }
+
+    function updateCartCount() {
+      const total = getCart().reduce((sum,e)=> sum + Number(e.qty), 0);
+      document.getElementById('cart-count').textContent = total;
+    }
+
+    // Wire events
+    document.getElementById('search').oninput = renderItems;
+    document.getElementById('sort').onchange  = renderItems;
+
+    // Initial render
+    renderItems();
+    updateCartCount();
+
+    function goToOrders() {
+     location.href = 'your-orders.html';
+    }
+
+  </script>
+</body>
+</html>
